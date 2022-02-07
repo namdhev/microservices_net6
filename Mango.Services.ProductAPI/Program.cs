@@ -92,7 +92,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Get all products
-app.MapGet("api/products", [Authorize] async ([FromServices] IProductRepository productRepository) =>
+app.MapGet("api/products", async ([FromServices] IProductRepository productRepository) =>
 {
     ResponseDto response = new ResponseDto();
     try
@@ -108,7 +108,7 @@ app.MapGet("api/products", [Authorize] async ([FromServices] IProductRepository 
 });
 
 //Get product by Id
-app.MapGet("api/products/{id}", [Authorize] async ([FromServices] IProductRepository productRepository, int id) =>
+app.MapGet("api/products/{id}", async ([FromServices] IProductRepository productRepository, int id) =>
 {
     ResponseDto response = new ResponseDto();
     try
