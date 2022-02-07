@@ -1,4 +1,4 @@
-name: build
+name: build & test
 
 on:
   push:
@@ -17,7 +17,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
-    - uses: actions/checkout@v2    
+    - name: Checkout latest from branch(-es)
+      uses: actions/checkout@v2
+      
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
