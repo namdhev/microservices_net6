@@ -1,0 +1,70 @@
+﻿@page
+@model Mango.Services.Identity.Pages.Register.Index
+
+@{
+    List<string> roles = new List<string>();
+    roles.Add("Admin");
+    roles.Add("Customer");
+    ViewBag.message = roles;
+}
+
+<div class="login-page">
+    <div class="lead">
+        <h1>Register</h1>
+        <p>Choose how to register</p>
+    </div>
+
+    <partial name="_ValidationSummary" />
+
+    <div class="row">
+
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Local Account Register</h2>
+                </div>
+
+                <div class="card-body">
+                    <form asp-page="/Account/Register/Index">
+                        <input type="hidden" asp-for="Input.ReturnUrl" />
+
+                        <div class="form-group">
+                            <label asp-for="Input.Username"></label>
+                            <input class="form-control" placeholder="Username" asp-for="Input.Username" autofocus>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.Email"></label>
+                            <input class="form-control" placeholder="Email" asp-for="Input.Email" autofocus>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.FirstName"></label>
+                            <input class="form-control" placeholder="First Name" asp-for="Input.FirstName" autofocus>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.LastName"></label>
+                            <input class="form-control" placeholder="Last Name" asp-for="Input.LastName" autofocus>
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.Password"></label>
+                            <input type="password" class="form-control" placeholder="Password" asp-for="Input.Password" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label asp-for="Input.RoleName"></label>
+                            <select asp-for="Input.RoleName" class="form-control" asp-items="@(new SelectList(ViewBag.message))"></select>
+                        </div>
+                        <button class="btn btn-primary" name="button" value="Register">Register</button>
+                        <button class="btn btn-secondary" name="button" value="cancel">Cancel</button>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <a  
+                        asp-page="/Account/Login/Index"
+                        asp-route-returnUrl="@Model.Input.ReturnUrl"
+                    >Login</a>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
