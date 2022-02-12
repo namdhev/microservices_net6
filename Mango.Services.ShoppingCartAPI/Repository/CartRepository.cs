@@ -5,12 +5,13 @@ using Mango.Services.ShoppingCartAPI.Models;
 using Mango.Services.ShoppingCartAPI.Models.Dto;
 using Microsoft.EntityFrameworkCore;
 
+#nullable disable
 namespace Mango.Services.ShoppingCartAPI.Repository
 {
     public class CartRepository : ICartRepository
     {
         private readonly ApplicationDbContext _db;
-        private readonly IMapper _mapper;
+        private  IMapper _mapper;
 
         public CartRepository(ApplicationDbContext db, IMapper mapper)
         {
@@ -41,14 +42,14 @@ namespace Mango.Services.ShoppingCartAPI.Repository
 
         }
 
-        public async Task<CartDto> CreateOrUpdateCart(CartDto cartDto)
+        public async Task<CartDto> CreateUpdateCart(CartDto cartDto)
         {
-            var cart = _mapper.Map<Cart>(cartDto);
+            Cart cart = _mapper.Map<Cart>(cartDto);
             // Check and add if product does not exist in DB
-            var prodFromDb = await _db.Products.AsNoTracking()
+            var prodInDb = await _db.Products
                 .FirstOrDefaultAsync(pdt => pdt.ProductId == cartDto.CartDetails.FirstOrDefault()
                 .ProductId);
-            if (prodFromDb == null)
+            if (prodInDb == null)
             {
                 _db.Products.Add(cart.CartDetails.FirstOrDefault().Product);
                 await _db.SaveChangesAsync();
@@ -56,15 +57,15 @@ namespace Mango.Services.ShoppingCartAPI.Repository
 
 
             // Check and add if cart header not found
-            var cartHeader = await _db.CartHeaders.AsNoTracking()
-                .FirstOrDefaultAsync(ch => ch.CartHeaderId == cartDto.CartHeader.CartHeaderId);
-            if (cartHeader == null)
+            var cartHeaderFromDb = await _db.CartHeaders.AsNoTracking()
+                .FirstOrDefaultAsync(ch => ch.UserId == cart.CartHeader.UserId);
+            if (cartHeaderFromDb == null)
             {
                 _db.CartHeaders.Add(cart.CartHeader);
                 await _db.SaveChangesAsync();
 
                 // Add cart details
-                cart.CartDetails.FirstOrDefault().CartHeaderId = cartDto.CartHeader.CartHeaderId;
+                cart.CartDetails.FirstOrDefault().CartHeaderId = cart.CartHeader.CartHeaderId;
                 cart.CartDetails.FirstOrDefault().Product = null; // to avoid conflict of inserting existing product id
                 _db.CartDetails.Add(cart.CartDetails.FirstOrDefault());
                 await _db.SaveChangesAsync();
@@ -75,12 +76,12 @@ namespace Mango.Services.ShoppingCartAPI.Repository
                 var cartDetailsFromDb = await _db.CartDetails.AsNoTracking().FirstOrDefaultAsync(cd =>
                     cd.ProductId == cart.CartDetails.FirstOrDefault().ProductId
                     &&
-                    cd.CartHeaderId == cart.CartDetails.FirstOrDefault().CartHeaderId);
+                    cd.CartHeaderId == cartHeaderFromDb.CartHeaderId);
                 // check if cart detail belongs to same product
                 if (cartDetailsFromDb == null)
                 {
                     // add if cart detail does not belong to same product
-                    cart.CartDetails.FirstOrDefault().CartHeaderId = cartDetailsFromDb.CartHeaderId;
+                    cart.CartDetails.FirstOrDefault().CartHeaderId = cartHeaderFromDb.CartHeaderId;
                     cart.CartDetails.FirstOrDefault().Product = null; // to avoid conflict of inserting existing product id
                     _db.CartDetails.Add(cart.CartDetails.FirstOrDefault());
                     await _db.SaveChangesAsync();
@@ -90,6 +91,7 @@ namespace Mango.Services.ShoppingCartAPI.Repository
                     // update count if cart detail belongs to same product
                     cart.CartDetails.FirstOrDefault().Product = null; // to avoid conflict of inserting existing product id
                     cart.CartDetails.FirstOrDefault().Count += cartDetailsFromDb.Count;
+                    cart.CartDetails.FirstOrDefault().CartHeaderId = cartHeaderFromDb.CartHeaderId;
                     _db.CartDetails.Update(cart.CartDetails.FirstOrDefault());
                     await _db.SaveChangesAsync();
                 }
