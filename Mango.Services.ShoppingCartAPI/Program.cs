@@ -116,7 +116,7 @@ app.MapPost($"{cartRoute}/createCart", async ([FromServices] ICartRepository car
     ResponseDto response = new();
     try
     {
-        CartDto _cartDto = await cartRepository.CreateOrUpdateCart(cartDto);
+        CartDto _cartDto = await cartRepository.CreateUpdateCart(cartDto);
         response.Result = _cartDto;
     }
     catch (Exception e)
@@ -135,7 +135,7 @@ app.MapPost($"{cartRoute}/updateCart", async ([FromServices] ICartRepository car
     ResponseDto response = new();
     try
     {
-        CartDto _cartDto = await cartRepository.CreateOrUpdateCart(cartDto);
+        CartDto _cartDto = await cartRepository.CreateUpdateCart(cartDto);
         response.Result = _cartDto;
     }
     catch (Exception e)
@@ -149,7 +149,7 @@ app.MapPost($"{cartRoute}/updateCart", async ([FromServices] ICartRepository car
 });
 
 // Remove from cart
-app.MapPost($"{cartRoute}/removeCart", async ([FromServices] ICartRepository cartRepository, [FromBody] int cartDetailsId) =>
+app.MapPost($"{cartRoute}/removeFromCart", async ([FromServices] ICartRepository cartRepository, [FromBody] int cartDetailsId) =>
 {
     ResponseDto response = new();
     try
