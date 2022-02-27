@@ -7,14 +7,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Add HttpClient, set API Base URLs and add corresponding service wrappers
 builder.Services.AddHttpClient<IProductService, ProductService>();
 builder.Services.AddHttpClient<ICartService, CartService>();
+builder.Services.AddHttpClient<ICouponService, CouponService>();
 
 SD.ProductAPIBase = builder.Configuration.GetSection("ServiceUrls:ProductAPI").Value;
 SD.ShoppingCartAPIBase = builder.Configuration.GetSection("ServiceUrls:ShoppingCartAPI").Value;
+SD.CouponAPIBase = builder.Configuration.GetSection("ServiceUrls:CouponAPI").Value;
 
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<ICouponService, CouponService>();
 
 // Add authentication
 builder.Services.AddAuthentication(options =>

@@ -26,22 +26,23 @@ builder.Services.AddSwaggerGen(options =>
         Type= SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-    var securityRequirement = new OpenApiSecurityRequirement();
-    securityRequirement.Add(
-        new OpenApiSecurityScheme
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
-            Reference = new OpenApiReference
+            new OpenApiSecurityScheme
             {
-                Type = ReferenceType.SecurityScheme,
-                Id = "Bearer"
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
             },
-            Scheme = "oauth2",
-            Name = "Bearer",
-            In = ParameterLocation.Header
-        },
-        new List<string>()
-    );
-    options.AddSecurityRequirement(securityRequirement);
+            new List<string>()
+        }
+    });
 });
 
 //configuring the DB conn via appsettings
