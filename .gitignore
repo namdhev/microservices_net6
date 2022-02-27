@@ -132,6 +132,9 @@ _ReSharper*/
 *.[Rr]e[Ss]harper
 *.DotSettings.user
 
+# AppSettings
+appsettings.json
+
 # TeamCity is a build add-in
 _TeamCity*
 

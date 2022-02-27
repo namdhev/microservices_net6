@@ -1,13 +1,14 @@
 using AutoMapper;
 using Mango.Services.ShoppingCartAPI;
 using Mango.Services.ShoppingCartAPI.DbContexts;
-using Mango.Services.ShoppingCartAPI.Models;
+using Mango.Services.ShoppingCartAPI.Messages;
 using Mango.Services.ShoppingCartAPI.Models.Dto;
 using Mango.Services.ShoppingCartAPI.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Mango.MessageBus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,12 @@ IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
+
+// declaring constants
+const string cartRoute = "api/cart";
+var checkoutConnectionString = builder.Configuration.GetConnectionString("CheckoutTopicConn");
+var checkoutTopicName = builder.Configuration.GetSection("CheckoutTopicName").Value;
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
@@ -87,8 +94,6 @@ app.UseHttpsRedirection();
 //Adding use authentication & use authorization
 app.UseAuthentication();
 app.UseAuthorization();
-
-string cartRoute = "api/cart";
 
 // get cart by user id
 app.MapGet($"{cartRoute}/{{userId}}", async ([FromServices] ICartRepository cartRepository, string userId) =>
@@ -156,6 +161,71 @@ app.MapPost($"{cartRoute}/removeFromCart", async ([FromServices] ICartRepository
     {
         bool isRemovalSuccess = await cartRepository.RemoveFromCart(cartDetailsId);
         response.Result = isRemovalSuccess;
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        response.IsSuccess = false;
+        response.ErrorMessages = new List<string>() { e.ToString() };
+    }
+
+    return response;
+});
+
+// Apply coupon code
+app.MapPost($"{cartRoute}/applyCouponCode", async ([FromServices] ICartRepository cartRepository, [FromBody] CartDto cartDto) =>
+{
+    ResponseDto response = new();
+    try
+    {
+        bool isRemovalSuccess = await cartRepository.ApplyCoupon(cartDto.CartHeader.UserId, cartDto.CartHeader.CouponCode);
+        response.Result = isRemovalSuccess;
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        response.IsSuccess = false;
+        response.ErrorMessages = new List<string>() { e.ToString() };
+    }
+
+    return response;
+});
+
+// Remove coupon code
+app.MapPost($"{cartRoute}/removeCouponCode", async ([FromServices] ICartRepository cartRepository, [FromBody] string userId) =>
+{
+    ResponseDto response = new();
+    try
+    {
+        bool isRemovalSuccess = await cartRepository.RemoveCoupon(userId);
+        response.Result = isRemovalSuccess;
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        response.IsSuccess = false;
+        response.ErrorMessages = new List<string>() { e.ToString() };
+    }
+
+    return response;
+});
+
+// Checkout
+app.MapPost($"{cartRoute}/checkout", async Task<object> (
+    [FromServices] ICartRepository cartRepository,
+    [FromServices] IMessageBus messageBus,
+    [FromBody] CheckoutHeaderDto checkoutHeader) =>
+{
+    ResponseDto response = new();
+    try
+    {
+        CartDto cartDto = await cartRepository.GetCartByUserId(checkoutHeader.UserId);
+
+        if (cartDto.Equals(null))
+            return Microsoft.AspNetCore.Http.Results.BadRequest();
+
+        checkoutHeader.CartDetails = cartDto.CartDetails;
+        await messageBus.PublishMessage(checkoutHeader, checkoutTopicName, checkoutConnectionString);
     }
     catch (Exception e)
     {

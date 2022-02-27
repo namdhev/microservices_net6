@@ -63,12 +63,27 @@
                     }
                     <div class="row">
                         <div class="col-6">
-                            <span>Coupon:</span>
-                            <input />
-                            <button type="submit" class="btn-success"> Apply </button>
+                            @if (string.IsNullOrEmpty(Model.CartHeader.CouponCode))
+                            {
+                                <span>Coupon:</span>
+                                <input asp-for="CartHeader.CouponCode"/>
+                                <button type="submit" asp-action="ApplyCoupon" class="btn-success"> Apply </button>
+                            }
+                            else
+                            {
+                                <span>Coupon:</span>
+                                <input asp-for="CartHeader.CouponCode" disabled/>
+                                <button type="submit" asp-action="RemoveCoupon" class="btn-danger"> Remove </button>
+                            }
+                            
+
                         </div>
                         <div class="col-6 text-end">
                             <span class="text-danger" style="font-size:21px;">  Order Total : @Model.CartHeader.OrderTotal.ToString("C", System.Globalization.CultureInfo.CreateSpecificCulture("en-US")) <br /></span>
+                            @if (Model.CartHeader.DiscountTotal > 0)
+                            {
+                                <span class="text-success">Order Discount: @Model.CartHeader.DiscountTotal.ToString("C", System.Globalization.CultureInfo.CreateSpecificCulture("en-US"))</span>
+                            }
                         </div>
                     </div>
                 </div>

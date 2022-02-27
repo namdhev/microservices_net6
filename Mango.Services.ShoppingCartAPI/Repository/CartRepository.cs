@@ -92,6 +92,7 @@ namespace Mango.Services.ShoppingCartAPI.Repository
                     cart.CartDetails.FirstOrDefault().Product = null; // to avoid conflict of inserting existing product id
                     cart.CartDetails.FirstOrDefault().Count += cartDetailsFromDb.Count;
                     cart.CartDetails.FirstOrDefault().CartHeaderId = cartHeaderFromDb.CartHeaderId;
+                    cart.CartDetails.FirstOrDefault().CartDetailId = cartDetailsFromDb.CartDetailId;
                     _db.CartDetails.Update(cart.CartDetails.FirstOrDefault());
                     await _db.SaveChangesAsync();
                 }
@@ -125,6 +126,41 @@ namespace Mango.Services.ShoppingCartAPI.Repository
             catch (Exception e)
             {
                 Console.WriteLine("Error occurred while removing cart items\n", e.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> ApplyCoupon(string userId, string couponCode)
+        {
+            try
+            {
+                var cartFromDb = await _db.CartHeaders.FirstOrDefaultAsync(cartHeader => cartHeader.UserId == userId);
+                cartFromDb.CouponCode = couponCode;
+                _db.CartHeaders.Update(cartFromDb);
+                await _db.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
+            }
+
+        }
+
+        public async Task<bool> RemoveCoupon(string userId)
+        {
+            try
+            {
+                var cartFromDb = await _db.CartHeaders.FirstOrDefaultAsync(cartHeader => cartHeader.UserId == userId);
+                cartFromDb.CouponCode = "";
+                _db.CartHeaders.Update(cartFromDb);
+                await _db.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
                 return false;
             }
         }
