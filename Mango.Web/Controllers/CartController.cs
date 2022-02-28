@@ -75,6 +75,11 @@ namespace Mango.Web.Controllers
             {
                 var accessToken = await HttpContext.GetTokenAsync("access_token");
                 var response = await _cartService.CheckoutAsync<ResponseDto>(cartDto.CartHeader);
+                if (response is {IsSuccess: false})
+                {
+                    TempData["Error"] = response.DisplayMessage;
+                    return RedirectToAction(nameof(Checkout));
+                }
                 return RedirectToAction(nameof(Confirmation));
             }
             catch (Exception e)
@@ -99,7 +104,7 @@ namespace Mango.Web.Controllers
             if (response != null && response.IsSuccess)
                 cartDto = JsonConvert.DeserializeObject<CartDto>(Convert.ToString(response.Result));
 
-            if (cartDto.CartHeader != null)
+            if (cartDto is {CartHeader: { }})
             {
                 if (!string.IsNullOrEmpty(cartDto.CartHeader.CouponCode))
                 {

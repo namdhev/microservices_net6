@@ -53,6 +53,9 @@ IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICouponRepository, CouponRepository>();
+builder.Services.AddHttpClient<ICouponRepository, CouponRepository>(u => u.BaseAddress = 
+    new Uri(builder.Configuration["ServiceUrls:CouponAPI"]));
 builder.Services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
 
 // declaring constants
@@ -213,6 +216,7 @@ app.MapPost($"{cartRoute}/removeCouponCode", async ([FromServices] ICartReposito
 // Checkout
 app.MapPost($"{cartRoute}/checkout", async Task<object> (
     [FromServices] ICartRepository cartRepository,
+    [FromServices] ICouponRepository couponRepository,
     [FromServices] IMessageBus messageBus,
     [FromBody] CheckoutHeaderDto checkoutHeader) =>
 {
@@ -221,11 +225,24 @@ app.MapPost($"{cartRoute}/checkout", async Task<object> (
     {
         CartDto cartDto = await cartRepository.GetCartByUserId(checkoutHeader.UserId);
 
-        if (cartDto.Equals(null))
+        if (cartDto == null)
             return Microsoft.AspNetCore.Http.Results.BadRequest();
+
+        if (checkoutHeader.CouponCode != null)
+        {
+            CouponDto coupon = await couponRepository.GetCoupon(checkoutHeader.CouponCode);
+            if (checkoutHeader.DiscountTotal != coupon.DiscountAmount)
+            {
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string>() {"Coupon has changed, please confirm"};
+                response.DisplayMessage = "Coupon has changed, please confirm";
+                return response;
+            }
+        }
 
         checkoutHeader.CartDetails = cartDto.CartDetails;
         await messageBus.PublishMessage(checkoutHeader, checkoutTopicName, checkoutConnectionString);
+        await cartRepository.ClearCart(checkoutHeader.UserId);
     }
     catch (Exception e)
     {
@@ -250,7 +267,7 @@ app.MapPost($"{cartRoute}/clearCart", async ([FromServices] ICartRepository cart
     {
         Console.WriteLine(e);
         response.IsSuccess = false;
-        response.ErrorMessages = new List<string>() { e.ToString() };
+        response.ErrorMessages = new List<string>() {e.ToString()};
     }
 
     return response;

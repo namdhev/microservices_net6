@@ -1,3 +1,4 @@
+using Mango.MessageBus;
 using Mango.Services.OrderAPI.DbContexts;
 using Mango.Services.OrderAPI.Messaging;
 using Mango.Services.OrderAPI.Repository;
@@ -54,6 +55,7 @@ optionsBuilder.UseSqlServer(builder.Configuration.GetConnectionString("Conn"));
 
 builder.Services.AddSingleton<IOrderRepository>(new OrderRepository(optionsBuilder.Options));
 builder.Services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>();
+builder.Services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
 
 
 builder.Services.AddAuthentication("Bearer")

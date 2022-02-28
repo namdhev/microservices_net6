@@ -1,6 +1,11 @@
 ﻿@model CartDto
 
-@if (Model.CartHeader != null && Model.CartDetails.Count() > 0)
+@if (Model is null)
+{
+    <div class="alert-info alert" role="alert">Cart is empty. Please add new items from home page.</div>
+}
+
+@if (Model is {CartHeader: { } } && Model.CartDetails.Any())
 {
     <form method="post">
         <br />
