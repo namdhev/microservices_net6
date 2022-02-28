@@ -61,7 +61,8 @@ builder.Services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
 // declaring constants
 const string cartRoute = "api/cart";
 var checkoutConnectionString = builder.Configuration.GetConnectionString("CheckoutTopicConn");
-var checkoutTopicName = builder.Configuration.GetSection("CheckoutTopicName").Value;
+var checkoutTopicName = builder.Configuration["CheckoutTopicName"];
+var checkoutQueueName = builder.Configuration["CheckoutQueueName"];
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
@@ -241,7 +242,7 @@ app.MapPost($"{cartRoute}/checkout", async Task<object> (
         }
 
         checkoutHeader.CartDetails = cartDto.CartDetails;
-        await messageBus.PublishMessage(checkoutHeader, checkoutTopicName, checkoutConnectionString);
+        await messageBus.PublishMessage(checkoutHeader, checkoutQueueName, checkoutConnectionString);
         await cartRepository.ClearCart(checkoutHeader.UserId);
     }
     catch (Exception e)

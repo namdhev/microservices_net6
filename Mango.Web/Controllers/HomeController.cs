@@ -10,13 +10,11 @@ namespace Mango.Web.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
         private readonly IProductService _productService;
         private readonly ICartService _cartService;
 
-        public HomeController(ILogger<HomeController> logger, IProductService productService, ICartService cartService)
+        public HomeController(IProductService productService, ICartService cartService)
         {
-            _logger = logger;
             _productService = productService;
             _cartService = cartService;
         }

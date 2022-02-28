@@ -15,7 +15,7 @@ namespace Mango.Services.OrderAPI.Messaging
         private readonly IMessageBus _messageBus;
 
         private readonly string _subConnStr;
-        private readonly string _checkoutTopicName;
+        private readonly string _checkoutQueueName;
         private readonly string _checkoutTopicSubscriptionName;
         private readonly string _orderPaymentProcessTopicName;
         private readonly string _orderUpdatePaymentResultTopicName;
@@ -30,18 +30,18 @@ namespace Mango.Services.OrderAPI.Messaging
             )
         {
             _orderRepository = orderRepository;
-            var configuration1 = configuration;
+            var _configuration = configuration;
             _messageBus = messageBus;
 
-            _subConnStr = configuration1.GetValue<string>("ServiceBusSettings:ServiceBusConn");
-            _checkoutTopicName = configuration1.GetValue<string>("ServiceBusSettings:CheckoutTopicName");
-            _checkoutTopicSubscriptionName = configuration1.GetValue<string>("ServiceBusSettings:CheckoutSubscriptionName");
-            
-            _orderPaymentProcessTopicName = configuration1.GetValue<string>("ServiceBusSettings:OrderPaymentProcessTopicName");
-            _orderUpdatePaymentResultTopicName = configuration1.GetValue<string>("ServiceBusSettings:OrderUpdatePaymentResultTopicName");
+            _subConnStr = _configuration.GetValue<string>("ServiceBusSettings:ServiceBusConn");
+            _checkoutQueueName = _configuration.GetValue<string>("ServiceBusSettings:CheckoutQueueName");
+            _checkoutTopicSubscriptionName = _configuration.GetValue<string>("ServiceBusSettings:CheckoutSubscriptionName");
+
+            _orderPaymentProcessTopicName = _configuration.GetValue<string>("ServiceBusSettings:OrderPaymentProcessTopicName");
+            _orderUpdatePaymentResultTopicName = _configuration.GetValue<string>("ServiceBusSettings:OrderUpdatePaymentResultTopicName");
 
             var client = new ServiceBusClient(_subConnStr);
-            _checkoutProcessor = client.CreateProcessor(_checkoutTopicName, _checkoutTopicSubscriptionName);
+            _checkoutProcessor = client.CreateProcessor(_checkoutQueueName);
             _orderUpdatePaymentResultProcessor =
                 client.CreateProcessor(_orderUpdatePaymentResultTopicName, _checkoutTopicSubscriptionName);
         }
